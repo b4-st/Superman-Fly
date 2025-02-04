@@ -136,12 +136,11 @@ RunService.Heartbeat:Connect(function()
 					LoadIdle2:AdjustWeight(0.5)
 				end
 				LoadFly:Stop()
-				TweenService:Create(FlyPart, TweenInfo.new(0.25), {
-					CFrame = CFrame.lookAt(FlyPart.Position, FlyPart.Position + CurrentCamera.CFrame.LookVector)
-				}):Play()
 				FlyVelocity.Velocity = Vector3.new(0, 0, 0)
+				local LookVector = FlyPart.Position + CurrentCamera.CFrame.LookVector
+				local IdleCFrame = CFrame.lookAt(FlyPart.Position, LookVector)
 				TweenService:Create(FlyPart, TweenInfo.new(0.25), {
-					CFrame = CFrame.lookAt(FlyPart.Position, FlyPart.Position + CurrentCamera.CFrame.LookVector)
+					CFrame = IdleCFrame
 				}):Play()
 			else
 				if not LoadFly.IsPlaying then
