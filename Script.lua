@@ -8,15 +8,20 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
-local IdleAnim = Instance.new("Animation")
-IdleAnim.AnimationId = "rbxassetid://10921144709"
+local IdleAnim1 = Instance.new("Animation")
+IdleAnim1.AnimationId = "rbxassetid://10921144709"
+local IdleAnim2 = Instance.new("Animation")
+IdleAnim2.AnimationId = "rbxassetid://10921132962"
 local FlyAnim = Instance.new("Animation")
 FlyAnim.AnimationId = "rbxassetid://10921294559"
-local LoadIdle = Humanoid:LoadAnimation(IdleAnim)
+local LoadIdle1 = Humanoid:LoadAnimation(IdleAnim1)
+local LoadIdle2 = Humanoid:LoadAnimation(IdleAnim2)
 local LoadFly = Humanoid:LoadAnimation(FlyAnim)
-LoadIdle.Priority = Enum.AnimationPriority.Action
+LoadIdle1.Priority = Enum.AnimationPriority.Action
+LoadIdle2.Priority = Enum.AnimationPriority.Action
 LoadFly.Priority = Enum.AnimationPriority.Action
-LoadIdle.Looped = true
+LoadIdle1.Looped = true
+LoadIdle2.Looped = true
 LoadFly.Looped = true
 
 local FlySpeed = 1
@@ -74,12 +79,15 @@ LocalPlayer.CharacterAdded:Connect(function()
 	Equipped = false
 	Enabled = false
 
-	LoadIdle = Humanoid:LoadAnimation(IdleAnim)
+	LoadIdle1 = Humanoid:LoadAnimation(IdleAnim1)
+	LoadIdle2 = Humanoid:LoadAnimation(IdleAnim2)
 	LoadFly = Humanoid:LoadAnimation(FlyAnim)
-	LoadIdle.Priority = Enum.AnimationPriority.Action
+	LoadIdle1.Priority = Enum.AnimationPriority.Action
+	LoadIdle2.Priority = Enum.AnimationPriority.Action
 	LoadFly.Priority = Enum.AnimationPriority.Action
-	LoadFly:AdjustSpeed(0)
-	LoadFly.TimePosition = 0.5
+	LoadIdle1.Looped = true
+	LoadIdle2.Looped = true
+	LoadFly.Looped = true
 
 	FlyVelocity.Velocity = Vector3.new(0, 0, 0)
 
@@ -122,8 +130,10 @@ RunService.Heartbeat:Connect(function()
 			end
 
 			if not Enabled then
-				if not LoadIdle.IsPlaying then
-					LoadIdle:Play()
+				if not LoadIdle1.IsPlaying then
+					LoadIdle1:Play()
+					LoadIdle2:Play()
+					LoadIdle2:AdjustWeight(0.5)
 				end
 				LoadFly:Stop()
 				TweenService:Create(FlyPart, TweenInfo.new(0.25), {
@@ -139,18 +149,20 @@ RunService.Heartbeat:Connect(function()
 					LoadFly:AdjustSpeed(0)
 					LoadFly.TimePosition = 0.5
 				end
-				LoadIdle:Stop()
+				LoadIdle1:Stop()
+				LoadIdle2:Stop()
 				local LookVector = (Mouse.Hit.Position - CurrentCamera.CFrame.Position).Unit
 				local FlyCFrame = CFrame.lookAt(FlyPart.Position, FlyPart.Position + LookVector)*CFrame.Angles(math.rad(-65), 0, 0)
 				FlyVelocity.Velocity = Vector3.new(0, 0, 0)
 				TweenService:Create(FlyPart, TweenInfo.new(0.25), {
-					CFrame = FlyCFrame + LookVector * (6 * FlySpeed)
+					CFrame = FlyCFrame + (LookVector * 5) * FlySpeed
 				}):Play()
 			end
 		else
 			if EquipFunction == true then
 				EquipFunction = false
-				LoadIdle:Stop()
+				LoadIdle1:Stop()
+				LoadIdle2:Stop()
 				LoadFly:Stop()
 				task.spawn(function()
 					local Enums = Enum.HumanoidStateType:GetEnumItems()
