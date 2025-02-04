@@ -19,18 +19,17 @@ LoadFly.Priority = Enum.AnimationPriority.Action
 LoadIdle.Looped = true
 LoadFly.Looped = true
 
+local FlySpeed = 1
+local EquipFunction = false
+local Equipped = false
+local Enabled = false
+
 local FlyPart = Instance.new("Part")
 FlyPart.Anchored = true
 FlyPart.CanCollide = false
 FlyPart.Transparency = 1
 FlyPart.Size = HumanoidRootPart.Size
 FlyPart.CFrame = HumanoidRootPart.CFrame
-FlyPart.Parent = CurrentCamera
-
-local FlySpeed = 1
-local EquipFunction = false
-local Equipped = false
-local Enabled = false
 
 local FlyTool = Instance.new("Tool")
 FlyTool.Name = "Fly"
@@ -47,28 +46,38 @@ FlyTool.Unequipped:Connect(function()
 	Enabled = false
 end)
 FlyTool.Activated:Connect(function()
+	FlyPart.CFrame = HumanoidRootPart.CFrame
 	Enabled = true
 end)
 FlyTool.Deactivated:Connect(function()
 	Enabled = false
 end)
 
+HumanoidRootPart:GetPropertyChangedSignal("CFrame"):Connect(function()
+	FlyPart.CFrame = HumanoidRootPart.CFrame
+end)
+
 LocalPlayer.CharacterAdded:Connect(function()
 	Character = LocalPlayer.Character or LocalPlayer.CharactedAdded:Wait()
 	Humanoid = Character:WaitForChild("Humanoid")
 	HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
 	FlyTool.Parent = LocalPlayer.Backpack
-	FlyPart.Size = HumanoidRootPart.Size
-	FlyPart.CFrame = HumanoidRootPart.CFrame
+
 	EquipFunction = false
 	Equipped = false
 	Enabled = false
+
 	LoadIdle = Humanoid:LoadAnimation(IdleAnim)
 	LoadFly = Humanoid:LoadAnimation(FlyAnim)
 	LoadIdle.Priority = Enum.AnimationPriority.Action
 	LoadFly.Priority = Enum.AnimationPriority.Action
 	LoadFly:AdjustSpeed(0)
 	LoadFly.TimePosition = 0.5
+
+	HumanoidRootPart:GetPropertyChangedSignal("CFrame"):Connect(function()
+		FlyPart.CFrame = HumanoidRootPart.CFrame
+	end)
 end)
 
 LocalPlayer.Chatted:Connect(function(Message)
@@ -83,22 +92,34 @@ end)
 RunService.Heartbeat:Connect(function()
 	if HumanoidRootPart then
 		if Equipped then
-			HumanoidRootPart.Anchored = true
-			Humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, false)
-			Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
-			Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-			Humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
-			Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
+			task.spawn(function()
+				local Enums = Enum.HumanoidStateType:GetEnumItems()
+				table.remove(Enums, table.find(Enums, Enum.HumanoidStateType.None))
+				for i,v in pairs(Enums) do
+					if Humanoid.Health > 0 then
+						Humanoid:SetStateEnabled(v, false)
+					else
+						Humanoid:SetStateEnabled(v, true)
+					end
+				end
+			end)
 			Humanoid.AutoRotate = false
 			EquipFunction = true
+
+			HumanoidRootPart.CFrame = FlyPart.CFrame
+			HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+			HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0)
+			if Character:FindFirstChild("Animate") then
+				Character.Animate.Enabled = false
+			end
 
 			if not Enabled then
 				if not LoadIdle.IsPlaying then
 					LoadIdle:Play()
 				end
 				LoadFly:Stop()
-				local Tween = TweenService:Create(HumanoidRootPart, TweenInfo.new(0.25), {
-					CFrame = CFrame.lookAt(HumanoidRootPart.Position, HumanoidRootPart.Position + CurrentCamera.CFrame.LookVector)
+				local Tween = TweenService:Create(FlyPart, TweenInfo.new(0.25), {
+					CFrame = CFrame.lookAt(FlyPart.Position, FlyPart.Position + CurrentCamera.CFrame.LookVector)
 				})
 				Tween:Play()
 			else
@@ -109,8 +130,8 @@ RunService.Heartbeat:Connect(function()
 				end
 				LoadIdle:Stop()
 				local LookVector = (Mouse.Hit.Position - CurrentCamera.CFrame.Position).Unit
-				local FlyCFrame = CFrame.lookAt(HumanoidRootPart.Position, HumanoidRootPart.Position + LookVector)*CFrame.Angles(math.rad(-65), 0, 0)
-				local Tween = TweenService:Create(HumanoidRootPart, TweenInfo.new(0.25), {
+				local FlyCFrame = CFrame.lookAt(FlyPart.Position, FlyPart.Position + LookVector)*CFrame.Angles(math.rad(-65), 0, 0)
+				local Tween = TweenService:Create(FlyPart, TweenInfo.new(0.25), {
 					CFrame = FlyCFrame + LookVector * (6 * FlySpeed)
 				})
 				Tween:Play()
@@ -120,17 +141,19 @@ RunService.Heartbeat:Connect(function()
 				EquipFunction = false
 				LoadIdle:Stop()
 				LoadFly:Stop()
-				HumanoidRootPart.Anchored = false
-				Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
-				Humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, true)
-				Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
-				Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-				Humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
-				Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true)
-				TweenService:Create(HumanoidRootPart, TweenInfo.new(0), {
-					CFrame = HumanoidRootPart.CFrame
-				}):Play()
+				task.spawn(function()
+					local Enums = Enum.HumanoidStateType:GetEnumItems()
+					table.remove(Enums, table.find(Enums, Enum.HumanoidStateType.None))
+					for i,v in pairs(Enums) do
+						Humanoid:SetStateEnabled(v, true)
+					end
+				end)
 				Humanoid.AutoRotate = true
+				HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+				HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0)
+				if Character:FindFirstChild("Animate") then
+					Character.Animate.Enabled = true
+				end
 			end
 		end
 	end
