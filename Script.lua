@@ -148,6 +148,7 @@ RunService.Heartbeat:Connect(function()
 						Humanoid:SetStateEnabled(v, true)
 					end
 				end)
+				Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
 				Humanoid.AutoRotate = true
 				HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 				HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0)
