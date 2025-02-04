@@ -181,3 +181,8 @@ RunService.Heartbeat:Connect(function()
 		end
 	end
 end)
+
+game:GetService("StarterGui"):SetCore("SendNotification",{
+	Title = "Superman Fly",
+	Text = "Type '/e flyspeed <speed>' in chat to change speed"
+})
