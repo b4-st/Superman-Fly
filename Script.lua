@@ -30,6 +30,12 @@ FlyPart.CanCollide = false
 FlyPart.Transparency = 1
 FlyPart.Size = HumanoidRootPart.Size
 FlyPart.CFrame = HumanoidRootPart.CFrame
+FlyPart.Parent = CurrentCamera
+
+local FlyVelocity = Instance.new("BodyVelocity")
+FlyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+FlyVelocity.Velocity = Vector3.new(0, 0, 0)
+FlyVelocity.Parent = FlyPart
 
 local FlyTool = Instance.new("Tool")
 FlyTool.Name = "Fly"
@@ -75,6 +81,8 @@ LocalPlayer.CharacterAdded:Connect(function()
 	LoadFly:AdjustSpeed(0)
 	LoadFly.TimePosition = 0.5
 
+	FlyVelocity.Velocity = Vector3.new(0, 0, 0)
+
 	HumanoidRootPart:GetPropertyChangedSignal("CFrame"):Connect(function()
 		FlyPart.CFrame = HumanoidRootPart.CFrame
 	end)
@@ -118,10 +126,13 @@ RunService.Heartbeat:Connect(function()
 					LoadIdle:Play()
 				end
 				LoadFly:Stop()
-				local Tween = TweenService:Create(FlyPart, TweenInfo.new(0.25), {
+				TweenService:Create(FlyPart, TweenInfo.new(0.25), {
 					CFrame = CFrame.lookAt(FlyPart.Position, FlyPart.Position + CurrentCamera.CFrame.LookVector)
-				})
-				Tween:Play()
+				}):Play()
+				FlyVelocity.Velocity = Vector3.new(0, 0, 0)
+				TweenService:Create(FlyPart, TweenInfo.new(0.25), {
+					CFrame = CFrame.lookAt(FlyPart.Position, FlyPart.Position + CurrentCamera.CFrame.LookVector)
+				}):Play()
 			else
 				if not LoadFly.IsPlaying then
 					LoadFly:Play(0.1)
@@ -131,10 +142,10 @@ RunService.Heartbeat:Connect(function()
 				LoadIdle:Stop()
 				local LookVector = (Mouse.Hit.Position - CurrentCamera.CFrame.Position).Unit
 				local FlyCFrame = CFrame.lookAt(FlyPart.Position, FlyPart.Position + LookVector)*CFrame.Angles(math.rad(-65), 0, 0)
-				local Tween = TweenService:Create(FlyPart, TweenInfo.new(0.25), {
+				FlyVelocity.Velocity = Vector3.new(0, 0, 0)
+				TweenService:Create(FlyPart, TweenInfo.new(0.25), {
 					CFrame = FlyCFrame + LookVector * (6 * FlySpeed)
-				})
-				Tween:Play()
+				}):Play()
 			end
 		else
 			if EquipFunction == true then
